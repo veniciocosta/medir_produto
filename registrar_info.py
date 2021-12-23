@@ -1,9 +1,8 @@
 import csv
 import os
-from datetime import datetime
 
 
-def gravar_medicoes(pasta_arq, cabecalho, data_hora, user, largura, altura, lado):
+def gravar_medicoes(pasta_arq, cabecalho, data_hora, user, lado, largura, altura, cor):
   if os.path.isfile(pasta_arq):
     dados = []
     with open(pasta_arq, 'r', encoding='utf-8') as arq_csv:
@@ -18,5 +17,5 @@ def gravar_medicoes(pasta_arq, cabecalho, data_hora, user, largura, altura, lado
   with open(pasta_arq, 'w', encoding='utf-8', newline="") as arquivo_cadastro:
       escritor = csv.writer(arquivo_cadastro)
       escritor.writerow(cabecalho)
-      dados.append([data_hora, user, largura, altura, lado])
+      dados.append([data_hora, user, lado, largura, altura, cor])
       escritor.writerows(dados)
