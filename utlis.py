@@ -7,16 +7,16 @@ def pegarContornos(frame, cThr=[100, 100], showBordas=False, minArea=1000, filtr
     imagemDesfocada = cv2.GaussianBlur(imagemCinza, (5, 5), 1)
     imagemBordas = cv2.Canny(imagemDesfocada, cThr[0], cThr[1])  # limiar 100, limiar 100
     kernel = np.ones((5, 5))
-    imagemDilatada = cv2.dilate(imagemBordas, kernel, iterations=3) # linha10
-    imagemThre = cv2.erode(imagemDilatada, kernel, iterations=2) # linha11
+    imagemDilatada = cv2.dilate(imagemBordas, kernel, iterations=3)  # linha10
+    imagemThre = cv2.erode(imagemDilatada, kernel, iterations=2)  # linha11
 
     # caso a marcação já seja bem detalahada, você não precisará "dilatar as bordas"
     # portanto poderá substituir imagemThre abaixo por imagemBordas e comentar as linhas 10 e 11
 
     if showBordas:
-        cv2.imshow("Bordas", imagemThre) # aqui
+        cv2.imshow("Bordas", imagemThre)  # aqui
 
-    contornos, hierarquia = cv2.findContours(imagemThre, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # aqui também
+    contornos, hierarquia = cv2.findContours(imagemThre, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  # aqui também
 
     contornos_finais = []
 
@@ -24,7 +24,7 @@ def pegarContornos(frame, cThr=[100, 100], showBordas=False, minArea=1000, filtr
         area = cv2.contourArea(i)
         if area > minArea:
             perimetro = cv2.arcLength(i, True)
-            contorno_aprox = cv2.approxPolyDP(i, 0.02 * perimetro, True) # original 0.02
+            contorno_aprox = cv2.approxPolyDP(i, 0.02 * perimetro, True)  # original 0.02
             retangulo_delimitador = cv2.boundingRect(contorno_aprox)
             if filtro > 0:
                 if len(contorno_aprox) == filtro:
@@ -56,13 +56,14 @@ def warpImagem(frame, pontos, largura, altura, pad=20):
     pontos = reordenar(pontos)
 
     pontos1 = np.float32(pontos)
-    pontos2 = np.float32([[0,0], [largura,0], [0, altura], [largura, altura]])
+    pontos2 = np.float32([[0, 0], [largura, 0], [0, altura], [largura, altura]])
     matriz = cv2.getPerspectiveTransform(pontos1, pontos2)
 
     imagemWarp = cv2.warpPerspective(frame, matriz, (largura, altura))
-    imagemWarp = imagemWarp[pad:imagemWarp.shape[0]-pad, pad:imagemWarp.shape[1]-pad]
+    imagemWarp = imagemWarp[pad:imagemWarp.shape[0] - pad, pad:imagemWarp.shape[1] - pad]
 
-    return  imagemWarp
+    return imagemWarp
+
 
 def encontrarDistancia(pts1, pts2):
-    return ((pts2[0]-pts1[0])**2 + (pts2[1]-pts1[1])**2)**0.5
+    return ((pts2[0] - pts1[0]) ** 2 + (pts2[1] - pts1[1]) ** 2) ** 0.5
