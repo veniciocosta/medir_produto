@@ -153,7 +153,7 @@ largura = 100
 altura = 100
 
 # Informações para registro das medições
-arquivo_dados = "dados_cracker.csv"
+arquivo_dados = "dados_produto_" + cod_produto + ".csv"
 pasta = os.environ['USERPROFILE']
 pasta_arq = os.path.join(pasta, "Desktop", arquivo_dados)
 cabecalho = ['Data e hora', 'User', 'Cod_prod', 'Desc_prod', 'Lado', 'Largura', 'Altura', 'Cor']
@@ -238,7 +238,7 @@ while verdadeiro:
                             1, (255, 255, 255), 1)
                 cv2.putText(frame2, direita2, (larguraPapel // 2, alturaPapel - 45), cv2.FONT_HERSHEY_PLAIN,
                             1, (255, 255, 255), 1)
-                print(x, y)  # exibir coordenadas do mouse
+                # print(x, y)  # exibir coordenadas do mouse
 
                 if 20 < x < 190 and 515 < y < 550:
                     lado = "Esquerdo"
