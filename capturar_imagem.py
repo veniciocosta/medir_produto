@@ -1,5 +1,4 @@
 import cv2
-from cracker_measurement import captura
 
 
 def registrar_img(captura):
