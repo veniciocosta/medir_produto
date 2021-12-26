@@ -79,7 +79,7 @@ def encontrarDistancia(pts1, pts2):
     return ((pts2[0] - pts1[0]) ** 2 + (pts2[1] - pts1[1]) ** 2) ** 0.5
 
 
-def gravar_medicoes(pasta_arq, cabecalho, data_hora, user, lado, largura, altura, cor):
+def gravar_medicoes(pasta_arq, cabecalho, data_hora, user, cod_prod, desc_prod, lado, largura, altura, cor):
     if os.path.isfile(pasta_arq):
         dados = []
         with open(pasta_arq, 'r', encoding='utf-8') as arq_csv:
@@ -93,9 +93,53 @@ def gravar_medicoes(pasta_arq, cabecalho, data_hora, user, lado, largura, altura
     with open(pasta_arq, 'w', encoding='utf-8', newline="") as arquivo_cadastro:
         escritor = csv.writer(arquivo_cadastro)
         escritor.writerow(cabecalho)
-        dados.append([data_hora, user, lado, largura, altura, cor])
+        dados.append([data_hora, user, cod_prod, desc_prod, lado, largura, altura, cor])
         escritor.writerows(dados)
 
+
+# Criar um dicionário de produtos
+dict_produtos = {
+    '48019': "ESTRELA CREAM CRACKER 20X400",
+    '8952': "PREDILLETO BISCOITO CRACKER 20X400",
+    '89019': "PREDILLETO CREAM CRACKER 20X400",
+    '48219': "PELAGGIO CREAM CRACKER 20X400",
+    '348219': "PELAGGIO CREAM CRACKER 20X400 - EXPORTAÇÃO",
+    '48018': "ESTRELA CREAM CRACKER AGUA E SAL 20X400",
+    '48215': "PELAGGIO CREAM CRACKER AMANTEIGADO 20X400",
+    '348213': "PELAGGIO SAUDAVEL CREAM CRACKER INTEGRAL 20X400 - EXPORTAÇÃO",
+    '48213': "PELAGGIO SAUDAVEL CREAM CRACKER INTEGRAL 20X400",
+    '80146': "BIRIBA CREAM CRACKER20X400G",
+    '89205': "BONSABOR CREAM CRACKER 20X400",
+    '32119': "FORTALEZA CREAM CRACKER 20X400G ",
+    '89426': "CARVALHO CREAM CRACKER 20X400G",
+    '389205': "BONSABOR CREAM CRACKER 20X400 – EXPORTAÇÃO",
+    '348215': "PELAGGIO CREAM CRACKER AMANTEIGADO 20X400 - EXPORTAÇÃO",
+    '348019': "ESTRELA CREAM CRACKER 20X400 - EXPORTAÇÃO",
+    '348018': "ESTRELA CREAM CRACKER AGUA E SAL 20X400 - EXPORTAÇÃO",
+    '75032': "PILAR CRACKER TRADICION 20X400",
+    '75027': "VIT CREAM CRACKER 20X400",
+    '48622': "PELAGGIO BISCOITO CREAM CRACKER TRADICIONAL 20X400",
+    '30105': "RICHESTER SUPERIORE CREAM CRACKER 20X400",
+    '330105': "RICHESTER SUPERIORE CREAM CRACKER 20X400 - EXPORTACAO"
+}
+
+while True:
+    # print(dict_produtos.keys())
+    print("\nBem vindo ao medidor de produtos\n")
+
+    continuar = input("Digite 1 para CONTINUAR \nou qualquer tecla para para SAIR\n")
+    if continuar != '1':
+        break
+
+    cod_produto = input("Qual o código do produto?\n")
+    if cod_produto not in dict_produtos.keys():
+        print('\nCódigo não existente, tente novamente\n')
+    else:
+        print("\nO produto escolhido foi: ", dict_produtos[cod_produto], '\n')
+        continuar = input("Digite 1 pra CONFIRMAR, ou qualquer tecla para retornar\n")
+        if continuar == '1':
+            descricao_prod = dict_produtos[cod_produto]
+            break
 
 webcam = False  # False para ler foto.jpg, True para ler webcam
 
@@ -112,13 +156,14 @@ altura = 100
 arquivo_dados = "dados_cracker.csv"
 pasta = os.environ['USERPROFILE']
 pasta_arq = os.path.join(pasta, "Desktop", arquivo_dados)
-cabecalho = ['Data e hora', 'User', 'Lado', 'Largura', 'Altura', 'Cor']
+cabecalho = ['Data e hora', 'User', 'Cod_prod', 'Desc_prod', 'Lado', 'Largura', 'Altura', 'Cor']
 data_hora = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
 user = os.getlogin()
 cor = "OK"
 lado = ""
 registro_esquerdo = False
 registro_direito = False
+# código e descrição já foram coletados no início
 # fim
 
 # cria matriz para x,y do mouse
@@ -200,7 +245,7 @@ while verdadeiro:
                     # escrever texto com lado nas coordenadas encontradas do mouse
                     # cv2.putText(frame2, 'Lado: ' + lado, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 128), 1)
                     # chamar função para gravar dados
-                    gravar_medicoes(pasta_arq, cabecalho, data_hora, user, lado, largura, altura, cor)
+                    gravar_medicoes(pasta_arq, cabecalho, data_hora, user, cod_produto, descricao_prod, lado, largura, altura, cor)
                     point_matrix[0] = 0
                     point_matrix[1] = 0
                     registro_esquerdo = True
@@ -210,7 +255,7 @@ while verdadeiro:
                     # escrever texto com lado nas coordenadas encontradas do mouse
                     # cv2.putText(frame2, 'Lado: ' + lado, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (128, 0, 0), 1)
                     # chamar função para gravar dados
-                    gravar_medicoes(pasta_arq, cabecalho, data_hora, user, lado, largura, altura, cor)
+                    gravar_medicoes(pasta_arq, cabecalho, data_hora, user, cod_produto, descricao_prod, lado, largura, altura, cor)
                     point_matrix[0] = 0
                     point_matrix[1] = 0
                     registro_direito = True
