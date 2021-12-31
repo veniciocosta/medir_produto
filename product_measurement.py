@@ -153,16 +153,17 @@ largura = 100
 altura = 100
 
 # Informações para registro das medições
-arquivo_dados = "dados_produto_" + cod_produto + ".csv"
+data_hora = datetime.today().strftime('%d-%m-%Y %H:%M:%S')
+data = datetime.today().strftime("%d-%m-%Y")
+arquivo_dados = "dados_produto_" + data + ".csv"
 pasta = os.environ['USERPROFILE']
 pasta_arq = os.path.join(pasta, "Desktop", arquivo_dados)
 cabecalho = ['Data e hora', 'User', 'Cod_prod', 'Desc_prod', 'Lado', 'Largura', 'Altura', 'Cor']
-data_hora = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
 user = os.getlogin()
 cor = "OK"
 lado = ""
-registro_esquerdo = False
-registro_direito = False
+registro_esquerdo = [False, 0]
+registro_direito = [False, 0]
 # código e descrição já foram coletados no início
 # fim
 
@@ -248,7 +249,7 @@ while verdadeiro:
                     gravar_medicoes(pasta_arq, cabecalho, data_hora, user, cod_produto, descricao_prod, lado, largura, altura, cor)
                     point_matrix[0] = 0
                     point_matrix[1] = 0
-                    registro_esquerdo = True
+                    registro_esquerdo = [True, registro_esquerdo[1]+1]
 
                 if 200 < x < 370 and 515 < y < 550:
                     lado = "Direito"
@@ -258,12 +259,17 @@ while verdadeiro:
                     gravar_medicoes(pasta_arq, cabecalho, data_hora, user, cod_produto, descricao_prod, lado, largura, altura, cor)
                     point_matrix[0] = 0
                     point_matrix[1] = 0
-                    registro_direito = True
+                    registro_direito = [True, registro_direito[1]+1]
 
-        if registro_esquerdo:
-            cv2.putText(frame2, 'Lado esquerdo registrado', (5, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 1)
-        if registro_direito:
-            cv2.putText(frame2, 'Lado direito registrado', (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 1)
+        if registro_esquerdo[0]:
+            cv2.putText(frame2, str(registro_esquerdo[1]) + ' - Lado esquerdo registrado', (5, 15),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.4, (0, 0,
+                                                                                                           255), 1)
+        if registro_direito[0]:
+            cv2.putText(frame2, str(registro_direito[1]) + ' - Lado direito registrado', (5, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.4, (0, 0, 255), 1)
 
         cv2.imshow("A4", frame2)
         cv2.setMouseCallback("A4", mousePoints)
