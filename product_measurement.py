@@ -141,13 +141,13 @@ while True:
             descricao_prod = dict_produtos[cod_produto]
             break
 
-webcam = False  # False para ler foto.jpg, True para ler webcam
+webcam = True  # False para ler foto.jpg, True para ler webcam
 
 arquivo_img = "foto.jpg"
-escala = 2
+escala = 3
 
 larguraPapel = 210 * escala
-alturaPapel = 297 * escala
+alturaPapel = 149 * escala
 
 largura = 100
 altura = 100
@@ -274,7 +274,7 @@ while verdadeiro:
         cv2.imshow("A4", frame2)
         cv2.setMouseCallback("A4", mousePoints)
 
-    # cv2.imshow("Original", frame)
+    cv2.imshow("Original", frame)
     # cv2.waitKey(1)
 
     tecla = cv2.waitKey(1)
