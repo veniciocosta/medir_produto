@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+
+{% block title %}Configurar SKU: {{ sku.code }} | Antigravity CV{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-8 fade-in">
+    <!-- Back Navigation link -->
+    <div class="mb-6">
+        <a href="{% url 'medicoes:dashboard' sku_id=sku.id %}" class="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-indigo-600 transition font-medium">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            <span>Voltar para Calibração e Captura</span>
+        </a>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
+        <!-- Card Header -->
+        <div class="bg-slate-900 px-6 py-5 text-white border-b border-slate-800">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="font-extrabold text-base tracking-tight">Configurar Parâmetros de Inspeção</h2>
+                    <span class="text-indigo-400 font-mono text-[10px] block mt-0.5">SKU Alvo: {{ sku.code }} — {{ sku.name }}</span>
+                </div>
+                <span class="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700/50 font-semibold font-mono">HUD do Calibrador</span>
+            </div>
+        </div>
+
+        <!-- Form content -->
+        <div class="p-6">
+            <form method="post" class="space-y-8">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <!-- Part 1: Copy Settings (Proactive helper) -->
+                <div class="bg-indigo-50/40 p-5 rounded-xl border border-indigo-100/60 space-y-4">
+                    <div class="flex items-center space-x-2 text-indigo-800">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                        </svg>
+                        <h3 class="font-bold text-xs uppercase tracking-wider">Duplicar Parâmetros</h3>
+                    </div>
+                    <p class="text-[10px] text-indigo-900/60 leading-relaxed">
+                        Acelere a calibração duplicando as configurações de um SKU existente. Apenas SKUs pertencentes a linhas de produção da <strong>mesma empresa</strong> são listados.
+                    </p>
+                    <div class="space-y-1.5">
+                        <label for="{{ form.copy_from_sku.id_for_label }}" class="block text-[10px] font-bold uppercase tracking-wider text-indigo-950/60">
+                            {{ form.copy_from_sku.label }}
+                        </label>
+                        {{ form.copy_from_sku }}
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Part 2: Geometric & Calibration parameters -->
+                <div class="space-y-6">
+                    <h3 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                        <span class="inline-block w-1.5 h-3 bg-indigo-600 rounded"></span>
+                        <span>Parâmetros do Calibrador CV</span>
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Shape category -->
+                        <div class="space-y-1.5 md:col-span-2">
+                            <label for="{{ form.object_format.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Geometria do Objeto Alvo
+                            </label>
+                            {{ form.object_format }}
+                            <p class="text-[10px] text-slate-400 leading-relaxed">{{ form.object_format.help_text }}</p>
+                        </div>
+                        
+                        <!-- Blur Kernel -->
+                        <div class="space-y-1.5">
+                            <label for="{{ form.blur_kernel_size.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Filtro de Desfoque de Ruído (Tamanho ímpar)
+                            </label>
+                            {{ form.blur_kernel_size }}
+                            <p class="text-[10px] text-slate-400 leading-relaxed">{{ form.blur_kernel_size.help_text }}</p>
+                            {% if form.blur_kernel_size.errors %}
+                                <p class="text-xs text-rose-500 font-bold leading-tight mt-1">{{ form.blur_kernel_size.errors.as_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Erosion compensation amount -->
+                        <div class="space-y-1.5">
+                            <label for="{{ form.erosion_amount.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Erosão de Blooming (Pixels)
+                            </label>
+                            {{ form.erosion_amount }}
+                            <p class="text-[10px] text-slate-400 leading-relaxed">{{ form.erosion_amount.help_text }}</p>
+                        </div>
+
+                        <!-- Canny low threshold -->
+                        <div class="space-y-1.5">
+                            <label for="{{ form.canny_threshold_low.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Histerese Baixa de Bordas
+                            </label>
+                            {{ form.canny_threshold_low }}
+                            <p class="text-[10px] text-slate-400 leading-relaxed">{{ form.canny_threshold_low.help_text }}</p>
+                        </div>
+
+                        <!-- Canny high threshold -->
+                        <div class="space-y-1.5">
+                            <label for="{{ form.canny_threshold_high.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Histerese Alta de Bordas
+                            </label>
+                            {{ form.canny_threshold_high }}
+                            <p class="text-[10px] text-slate-400 leading-relaxed">{{ form.canny_threshold_high.help_text }}</p>
+                        </div>
+
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Part 2.5: Caliper Calibration Offsets -->
+                <div class="space-y-6">
+                    <h3 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                        <span class="inline-block w-1.5 h-3 bg-amber-500 rounded"></span>
+                        <span>Offsets de Calibração Metrológica por Paquímetro</span>
+                    </h3>
+                    <p class="text-[10px] text-slate-400 leading-relaxed">
+                        Compense erros sistemáticos de medição da câmera/hardware em relação às medições de referência física do paquímetro. Insira os offsets em milímetros (mm); eles serão convertidos dinamicamente para centímetros e adicionados diretamente às medições brutas.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Width offset -->
+                        <div class="space-y-1.5">
+                            <label for="{{ form.width_offset_mm.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Offset de Calibração de Largura (mm)
+                            </label>
+                            {{ form.width_offset_mm }}
+                            <p class="text-[10px] text-slate-400 leading-relaxed">{{ form.width_offset_mm.help_text }}</p>
+                            {% if form.width_offset_mm.errors %}
+                                <p class="text-xs text-rose-500 font-bold leading-tight mt-1">{{ form.width_offset_mm.errors.as_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Length offset -->
+                        <div class="space-y-1.5">
+                            <label for="{{ form.length_offset_mm.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Offset de Calibração de Comprimento (mm)
+                            </label>
+                            {{ form.length_offset_mm }}
+                            <p class="text-[10px] text-slate-400 leading-relaxed">{{ form.length_offset_mm.help_text }}</p>
+                            {% if form.length_offset_mm.errors %}
+                                <p class="text-xs text-rose-500 font-bold leading-tight mt-1">{{ form.length_offset_mm.errors.as_text }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Part 2.8: Object Color Acceptance Specs (Tolerances) (Dark-themed Panel) -->
+                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-extrabold text-white text-xs uppercase tracking-wider flex items-center space-x-2">
+                            <span class="inline-block w-1.5 h-3 bg-indigo-500 rounded"></span>
+                            <span>Metas de Qualidade de Cor do Objeto (Tolerâncias)</span>
+                        </h3>
+                        <span class="text-[9px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700/50 uppercase font-bold tracking-wider font-mono">Gate de Qualidade</span>
+                    </div>
+                    
+                    <p class="text-[10px] text-slate-400 leading-relaxed">
+                        Estabeleça limites aceitáveis de média de cor para os produtos escaneados. Se a média de cor de um produto desviar desses limites, emitirá alertas de validação. Use os parâmetros de Escala de Cinza para um limiar monocromático rápido ou os parâmetros RGB para verificações de espectro de cor.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left Column: Grayscale Benchmark -->
+                        <div class="space-y-4 bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                            <h4 class="font-bold text-indigo-400 text-[11px] uppercase tracking-wider flex items-center space-x-1.5">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+                                </svg>
+                                <span>Gate de Qualidade de Escala de Cinza</span>
+                            </h4>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label for="{{ form.gray_target_value.id_for_label }}" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                        Alvo de Escala de Cinza
+                                    </label>
+                                    {{ form.gray_target_value }}
+                                    <p class="text-[9px] text-slate-500 leading-normal">{{ form.gray_target_value.help_text }}</p>
+                                    {% if form.gray_target_value.errors %}
+                                        <p class="text-[10px] text-rose-400 font-bold leading-tight mt-1">{{ form.gray_target_value.errors.as_text }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label for="{{ form.gray_tolerance_range.id_for_label }}" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                        Tolerância (+/-)
+                                    </label>
+                                    {{ form.gray_tolerance_range }}
+                                    <p class="text-[9px] text-slate-500 leading-normal">{{ form.gray_tolerance_range.help_text }}</p>
+                                    {% if form.gray_tolerance_range.errors %}
+                                        <p class="text-[10px] text-rose-400 font-bold leading-tight mt-1">{{ form.gray_tolerance_range.errors.as_text }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: RGB Spectral Benchmark -->
+                        <div class="space-y-4 bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                            <h4 class="font-bold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center space-x-1.5">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-3"/>
+                                </svg>
+                                <span>Gate de Qualidade de Espectro RGB</span>
+                            </h4>
+                            
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="space-y-1.5">
+                                    <label for="{{ form.rgb_target_r.id_for_label }}" class="block text-[10px] font-bold uppercase tracking-wider text-rose-400">
+                                        Alvo Vermelho
+                                    </label>
+                                    {{ form.rgb_target_r }}
+                                    {% if form.rgb_target_r.errors %}
+                                        <p class="text-[10px] text-rose-400 font-bold leading-tight mt-1">{{ form.rgb_target_r.errors.as_text }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label for="{{ form.rgb_target_g.id_for_label }}" class="block text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                                        Alvo Verde
+                                    </label>
+                                    {{ form.rgb_target_g }}
+                                    {% if form.rgb_target_g.errors %}
+                                        <p class="text-[10px] text-rose-400 font-bold leading-tight mt-1">{{ form.rgb_target_g.errors.as_text }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label for="{{ form.rgb_target_b.id_for_label }}" class="block text-[10px] font-bold uppercase tracking-wider text-sky-400">
+                                        Alvo Azul
+                                    </label>
+                                    {{ form.rgb_target_b }}
+                                    {% if form.rgb_target_b.errors %}
+                                        <p class="text-[10px] text-rose-400 font-bold leading-tight mt-1">{{ form.rgb_target_b.errors.as_text }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-1.5 pt-2 border-t border-slate-800/60">
+                                <label for="{{ form.rgb_spectrum_variance.id_for_label }}" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    Tolerância de Variância do Espectro (+/-)
+                                </label>
+                                {{ form.rgb_spectrum_variance }}
+                                <p class="text-[9px] text-slate-500 leading-normal">{{ form.rgb_spectrum_variance.help_text }}</p>
+                                {% if form.rgb_spectrum_variance.errors %}
+                                    <p class="text-[10px] text-rose-400 font-bold leading-tight mt-1">{{ form.rgb_spectrum_variance.errors.as_text }}</p>
+                                </{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Part 3: Video & backlighting targets -->
+                <div class="space-y-6">
+                    <h3 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                        <span class="inline-block w-1.5 h-3 bg-emerald-600 rounded"></span>
+                        <span>Parâmetros de Vídeo e Hardware</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <!-- Resolution W -->
+                        <div class="space-y-1.5">
+                            <label for="{{ form.resolution_width.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Largura de Captura (px)
+                            </label>
+                            {{ form.resolution_width }}
+                            <p class="text-[10px] text-slate-400 leading-relaxed">{{ form.resolution_width.help_text }}</p>
+                        </div>
+                        
+                        <!-- Resolution H -->
+                        <div class="space-y-1.5">
+                            <label for="{{ form.resolution_height.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Altura de Captura (px)
+                            </label>
+                            {{ form.resolution_height }}
+                            <p class="text-[10px] text-slate-400 leading-relaxed">{{ form.resolution_height.help_text }}</p>
+                        </div>
+
+                        <!-- Backlight target -->
+                        <div class="space-y-1.5">
+                            <label for="{{ form.brightness_target.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Alvo de Brilho
+                            </label>
+                            {{ form.brightness_target }}
+                            <p class="text-[10px] text-slate-400 leading-relaxed">{{ form.brightness_target.help_text }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="flex items-center space-x-4 border-t border-slate-100 pt-6 mt-10">
+                    <button type="submit" class="flex-grow bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-emerald-700/20 transition transform active:scale-95 text-sm flex items-center justify-center space-x-2">
+                        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Aplicar Calibração do SKU</span>
+                    </button>
+                    <a href="{% url 'medicoes:dashboard' sku_id=sku.id %}" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-3 px-4 rounded-xl text-xs transition text-center">
+                        Descartar e Voltar
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

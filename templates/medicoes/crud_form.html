@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | Antigravity CV{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-8 fade-in">
+    <!-- Back Navigation link -->
+    <div class="mb-6">
+        <a href="{% url 'medicoes:index' %}" class="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-indigo-600 transition font-medium">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            <span>Voltar para o Painel de Hierarquia</span>
+        </a>
+    </div>
+
+    <!-- Form Container Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
+        <!-- Card Header -->
+        <div class="bg-slate-900 px-6 py-5 text-white border-b border-slate-800">
+            <h2 class="font-extrabold text-base tracking-tight">{{ title }}</h2>
+            <p class="text-slate-400 text-xs mt-1">{{ description }}</p>
+        </div>
+        
+        <!-- Form Content -->
+        <div class="p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                {% for field in form %}
+                    <div class="space-y-1.5">
+                        <label for="{{ field.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <p class="text-[10px] text-slate-400 font-medium leading-relaxed">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% if field.errors %}
+                            <p class="mt-1 text-xs text-rose-500 font-bold leading-tight">{{ field.errors.as_text }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <!-- Action Triggers -->
+                <div class="flex items-center space-x-4 border-t border-slate-100 pt-6 mt-8">
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg hover:shadow-indigo-700/20 transition transform active:scale-95 text-sm flex items-center justify-center space-x-1.5">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>Confirmar e Salvar</span>
+                    </button>
+                    <a href="{% url 'medicoes:index' %}" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2.5 px-4 rounded-xl text-xs transition text-center">
+                        Cancelar
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Medir Produto | Controle de Qualidade CV{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Smooth micro-animations */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800 antialiased">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-900 shadow-md flex-shrink-0">
+        <div class="{% block header_container_class %}max-w-7xl mx-auto px-4 sm:px-6 lg:px-8{% endblock %}">
+            <div class="flex items-center justify-between h-16">
+                <!-- Left logo/brand -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                        <!-- Camera / Scanner Icon -->
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="text-white font-bold text-xl tracking-tight">Antigravity CV</span>
+                        <span class="text-indigo-400 font-semibold text-sm block -mt-1 uppercase">Controle de Qualidade</span>
+                    </div>
+                </div>
+                
+                <!-- Center/Right info -->
+                <div class="flex items-center space-x-4">
+                    <span class="text-slate-400 text-base hidden sm:inline-block">
+                        Operador: <strong class="text-slate-200">{% if user.is_authenticated %}{{ user.username }}{% else %}Anônimo{% endif %}</strong>
+                    </span>
+                    <div class="h-4 w-px bg-slate-700 hidden sm:block"></div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+                        Inspeção Ativa
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+ 
+    <!-- Main Content Container -->
+    <main class="flex-grow {% block container_class %}max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8{% endblock %} overflow-y-auto">
+        {% if messages %}
+            <div class="mb-2 space-y-1">
+                {% for message in messages %}
+                    <div class="py-1.5 px-3 rounded flex items-center justify-between shadow-sm text-sm font-semibold border {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border-emerald-200{% elif message.tags == 'error' %}bg-rose-50 text-rose-800 border-rose-200{% else %}bg-indigo-50 text-indigo-800 border-indigo-200{% endif %}">
+                        <span>{{ message }}</span>
+                        <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 focus:outline-none font-extrabold text-base ml-2 cursor-pointer leading-none" title="Descartar Alerta">
+                            &times;
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+ 
+        {% block content %}{% endblock %}
+    </main>
+ 
+    <!-- Sleek Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 flex-shrink-0">
+        <div class="{% block footer_container_class %}max-w-7xl mx-auto px-4 sm:px-6 lg:px-8{% endblock %} flex flex-col sm:flex-row items-center justify-between text-slate-500 text-xs">
+            <div>
+                &copy; 2026 Antigravity CV Systems. Todos os direitos reservados.
+            </div>
+            <div class="mt-2 sm:mt-0 flex space-x-4">
+                <span>Calibração padrão com folha de referência A4 branca</span>
+                <span>•</span>
+                <span>Análise de contornos com alinhamento de precisão</span>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
