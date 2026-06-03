@@ -3,13 +3,16 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.files.base import ContentFile
 from django.views import View
-from django.views.generic import ListView, CreateView, UpdateView
+from django.views.generic import ListView, CreateView, UpdateView, TemplateView
 from django.urls import reverse_lazy
 from django.db import transaction
+from django.db.models import Avg
 from django.http import JsonResponse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 from .forms import (
     MeasurementUploadForm, CompanyForm, DepartmentForm, 
@@ -21,7 +24,21 @@ from .models import (
 )
 from .services.cv_engine import analyze_product_image
 
-class IndexView(ListView):
+class LandingPageView(TemplateView):
+    """
+    B2B SaaS public storefront landing page.
+    """
+    template_name = 'medicoes/landing_page.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['container_class'] = 'w-full max-w-full p-0'
+        context['header_container_class'] = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'
+        context['footer_container_class'] = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'
+        return context
+
+
+class DashboardHubView(ListView):
     """
     Main organizational tree dashboard listing Companies, Departments,
     Sectors, Production Lines, and their target Product SKUs.
@@ -47,7 +64,7 @@ class CompanyCreateView(CreateView):
     model = Company
     form_class = CompanyForm
     template_name = 'medicoes/crud_form.html'
-    success_url = reverse_lazy('medicoes:index')
+    success_url = reverse_lazy('medicoes:dashboard_hub')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -64,7 +81,7 @@ class DepartmentCreateView(CreateView):
     model = Department
     form_class = DepartmentForm
     template_name = 'medicoes/crud_form.html'
-    success_url = reverse_lazy('medicoes:index')
+    success_url = reverse_lazy('medicoes:dashboard_hub')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -81,7 +98,7 @@ class SectorCreateView(CreateView):
     model = Sector
     form_class = SectorForm
     template_name = 'medicoes/crud_form.html'
-    success_url = reverse_lazy('medicoes:index')
+    success_url = reverse_lazy('medicoes:dashboard_hub')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -98,7 +115,7 @@ class ProductionLineCreateView(CreateView):
     model = ProductionLine
     form_class = ProductionLineForm
     template_name = 'medicoes/crud_form.html'
-    success_url = reverse_lazy('medicoes:index')
+    success_url = reverse_lazy('medicoes:dashboard_hub')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -115,7 +132,7 @@ class ProductSKUCreateView(CreateView):
     model = ProductSKU
     form_class = ProductSKUForm
     template_name = 'medicoes/crud_form.html'
-    success_url = reverse_lazy('medicoes:index')
+    success_url = reverse_lazy('medicoes:dashboard_hub')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -213,18 +230,26 @@ class MeasurementDashboardView(View):
         page_number = request.GET.get('page')
         return paginator.get_page(page_number)
 
+    def get_common_context(self, sku, page_obj, form=None, result_record=None):
+        if form is None:
+            form = MeasurementUploadForm(initial={'product_sku': sku})
+        return {
+            'form': form,
+            'sku': sku,
+            'page_obj': page_obj,
+            'result_record': result_record,
+            'container_class': 'w-full max-w-full px-1.5 py-1.5 sm:px-3 sm:py-3',
+            'header_container_class': 'w-full max-w-full px-2 sm:px-3',
+            'footer_container_class': 'w-full max-w-full px-2 sm:px-3',
+        }
+
     def get(self, request, sku_id, *args, **kwargs):
         # Enforce that SKU exists before landing on camera feed
         sku = get_object_or_404(ProductSKU, id=sku_id)
         form = MeasurementUploadForm(initial={'product_sku': sku})
         page_obj = self.get_paginated_records(request, sku)
         
-        context = {
-            'form': form,
-            'sku': sku,
-            'page_obj': page_obj,
-            'result_record': None
-        }
+        context = self.get_common_context(sku, page_obj, form)
         return render(request, self.template_name, context)
 
     def post(self, request, sku_id, *args, **kwargs):
@@ -233,24 +258,14 @@ class MeasurementDashboardView(View):
         
         if not form.is_valid():
             page_obj = self.get_paginated_records(request, sku)
-            context = {
-                'form': form,
-                'sku': sku,
-                'page_obj': page_obj,
-                'result_record': None
-            }
+            context = self.get_common_context(sku, page_obj, form)
             return render(request, self.template_name, context)
             
         uploaded_file = request.FILES.get('image')
         if not uploaded_file:
             form.add_error('image', "Por favor, selecione um arquivo de imagem para fazer o upload.")
             page_obj = self.get_paginated_records(request, sku)
-            context = {
-                'form': form,
-                'sku': sku,
-                'page_obj': page_obj,
-                'result_record': None
-            }
+            context = self.get_common_context(sku, page_obj, form)
             return render(request, self.template_name, context)
 
         # Read the uploaded file's raw bytes into memory
@@ -259,28 +274,24 @@ class MeasurementDashboardView(View):
         except Exception as e:
             form.add_error('image', f"Erro ao ler imagem: {str(e)}")
             page_obj = self.get_paginated_records(request, sku)
-            context = {
-                'form': form,
-                'sku': sku,
-                'page_obj': page_obj,
-                'result_record': None
-            }
+            context = self.get_common_context(sku, page_obj, form)
             return render(request, self.template_name, context)
 
         # Trigger our decoupled Computer Vision engine with dynamic SKU configuration
         config, _ = SKUConfiguration.objects.get_or_create(product_sku=sku)
-        cv_result = analyze_product_image(image_bytes, config=config)
+        config.refresh_from_db()
+        cv_result = analyze_product_image(
+            image_bytes,
+            config=config,
+            width_offset_mm_override=float(config.width_offset_mm),
+            length_offset_mm_override=float(config.length_offset_mm)
+        )
 
         if not cv_result['success']:
             # Render descriptive error back to the operator (A4 not found, etc.)
             form.add_error('image', cv_result['error'])
             page_obj = self.get_paginated_records(request, sku)
-            context = {
-                'form': form,
-                'sku': sku,
-                'page_obj': page_obj,
-                'result_record': None
-            }
+            context = self.get_common_context(sku, page_obj, form)
             return render(request, self.template_name, context)
 
         # Use an atomic transaction block to guarantee database integrity
@@ -328,23 +339,14 @@ class MeasurementDashboardView(View):
             # Re-fetch page_obj to include the new one (defaults to page 1)
             page_obj = self.get_paginated_records(request, sku)
             
-            context = {
-                'form': MeasurementUploadForm(initial={'product_sku': sku}),  # Reset form
-                'sku': sku,
-                'page_obj': page_obj,
-                'result_record': record  # Expose the newly created record for display
-            }
+            reset_form = MeasurementUploadForm(initial={'product_sku': sku})
+            context = self.get_common_context(sku, page_obj, form=reset_form, result_record=record)
             return render(request, self.template_name, context)
             
         except Exception as e:
             form.add_error(None, f"Falha na transação do banco de dados: {str(e)}")
             page_obj = self.get_paginated_records(request, sku)
-            context = {
-                'form': form,
-                'sku': sku,
-                'page_obj': page_obj,
-                'result_record': None
-            }
+            context = self.get_common_context(sku, page_obj, form)
             return render(request, self.template_name, context)
 
 
@@ -363,8 +365,14 @@ class AnalyzeLiveStreamView(View):
         try:
             sku = get_object_or_404(ProductSKU, id=sku_id)
             config, _ = SKUConfiguration.objects.get_or_create(product_sku=sku)
+            config.refresh_from_db()
             image_bytes = uploaded_file.read()
-            cv_result = analyze_product_image(image_bytes, config=config)
+            cv_result = analyze_product_image(
+                image_bytes,
+                config=config,
+                width_offset_mm_override=float(config.width_offset_mm),
+                length_offset_mm_override=float(config.length_offset_mm)
+            )
             
             if not cv_result['success']:
                 return JsonResponse({'success': False, 'error': cv_result['error']})
@@ -408,4 +416,76 @@ class MeasurementDetailJsonView(View):
             'timestamp': record.measured_at.strftime('%d/%m/%Y %H:%M:%S') if record.measured_at else '',
             'items': items_data
         })
+
+
+class SKUAnalyticsJsonView(View):
+    """
+    Lightweight JSON view returning averaged inspection metrics for SPC trend charts.
+    """
+    def get(self, request, sku_id, *args, **kwargs):
+        sku = get_object_or_404(ProductSKU, id=sku_id)
+        config, _ = SKUConfiguration.objects.get_or_create(product_sku=sku)
+        
+        # Get limit parameter from query string, defaulting to 30
+        limit_param = request.GET.get('limit', '30')
+        try:
+            limit = int(limit_param)
+            if limit <= 0:
+                limit = 30
+        except ValueError:
+            limit = 30
+
+        # Query the latest MeasurementRecord entries annotated with the average values of their items
+        records = MeasurementRecord.objects.filter(product_sku=sku).annotate(
+            width_avg=Avg('items__width_cm'),
+            length_avg=Avg('items__length_cm'),
+            grayscale_avg=Avg('items__grayscale_value'),
+            rgb_r_avg=Avg('items__r_value'),
+            rgb_g_avg=Avg('items__g_value'),
+            rgb_b_avg=Avg('items__b_value')
+        ).order_by('-measured_at')[:limit]
+
+        data = []
+        for r in records:
+            if r.width_avg is None:
+                continue
+            
+            local_time = timezone.localtime(r.measured_at)
+            today = timezone.localtime(timezone.now()).date()
+            if local_time.date() == today:
+                timestamp = local_time.strftime('%H:%M')
+            else:
+                timestamp = local_time.strftime('%d/%m')
+
+            data.append({
+                'timestamp': timestamp,
+                'width_avg': float(r.width_avg),
+                'length_avg': float(r.length_avg),
+                'grayscale_avg': float(r.grayscale_avg),
+                'rgb_r_avg': float(r.rgb_r_avg),
+                'rgb_g_avg': float(r.rgb_g_avg),
+                'rgb_b_avg': float(r.rgb_b_avg),
+            })
+
+        # CRITICAL: Reverse the array before returning the JsonResponse
+        data.reverse()
+
+        return JsonResponse({
+            'success': True,
+            'sku': {
+                'id': sku.id,
+                'code': sku.code,
+                'name': sku.name,
+                'target_width_cm': float(sku.target_width_cm),
+                'target_length_cm': float(sku.target_length_cm),
+                'gray_target_value': config.gray_target_value,
+                'gray_tolerance_range': config.gray_tolerance_range,
+                'rgb_target_r': config.rgb_target_r,
+                'rgb_target_g': config.rgb_target_g,
+                'rgb_target_b': config.rgb_target_b,
+                'rgb_spectrum_variance': config.rgb_spectrum_variance,
+            },
+            'data': data
+        })
+
 

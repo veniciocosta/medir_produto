@@ -2,18 +2,17 @@
 
 {% block title %}Painel de Inspeção de Controle de Qualidade | Antigravity CV{% endblock %}
 
-{% block container_class %}w-full max-w-full px-1.5 py-1.5 sm:px-3 sm:py-3{% endblock %}
-{% block header_container_class %}w-full max-w-full px-2 sm:px-3{% endblock %}
-{% block footer_container_class %}w-full max-w-full px-2 sm:px-3{% endblock %}
+
 
 {% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block content %}
 <div class="space-y-2 fade-in text-sm leading-tight m-0">
     <!-- Back Navigation Link -->
     <div>
-        <a href="{% url 'medicoes:index' %}" class="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-indigo-600 transition font-medium">
+        <a href="{% url 'medicoes:dashboard_hub' %}" class="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-indigo-600 transition font-medium">
             <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
@@ -281,6 +280,62 @@
             </section>
         </div>
         
+    </div>
+
+    <!-- Gráficos de Tendência e Controle Estatístico (CEP) -->
+    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm space-y-3 m-0 w-full max-w-full">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-2 gap-2">
+            <div>
+                <h2 class="font-bold text-slate-800 text-sm">Gráficos de Tendência e Controle Estatístico (CEP)</h2>
+                <p class="text-[10px] text-slate-500">Monitoramento analítico em tempo real de especificações de qualidade e consistência cromática.</p>
+            </div>
+            
+            <!-- Sleek dropdown filter -->
+            <div class="flex items-center space-x-1.5 flex-shrink-0">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Amostragem:</span>
+                <select id="spcLimitSelector" class="bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold py-1 px-2 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer">
+                    <option value="10">Últimas 10 coletas</option>
+                    <option value="30" selected>Últimas 30 coletas</option>
+                    <option value="50">Últimas 50 coletas</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Responsive grid layout mapping the variables cleanly in pt-BR -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <!-- Gráfico 1: Dimensões Físicas (Largura / Comprimento) -->
+            <div class="bg-slate-50 border border-slate-200 rounded p-2 flex flex-col h-[280px]">
+                <div class="flex items-center justify-between border-b border-slate-200/50 pb-1 mb-1.5 flex-shrink-0">
+                    <span class="font-bold text-slate-700 text-xs">Físico: Largura e Comprimento</span>
+                    <span class="text-[9px] text-slate-500 font-mono font-bold uppercase">cm</span>
+                </div>
+                <div class="relative flex-grow min-h-0">
+                    <canvas id="dimensionsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico 2: Intensidade de Cinza -->
+            <div class="bg-slate-50 border border-slate-200 rounded p-2 flex flex-col h-[280px]">
+                <div class="flex items-center justify-between border-b border-slate-200/50 pb-1 mb-1.5 flex-shrink-0">
+                    <span class="font-bold text-slate-700 text-xs">Qualidade: Intensidade de Cinza</span>
+                    <span class="text-[9px] text-slate-500 font-mono font-bold uppercase">Escala (0-255)</span>
+                </div>
+                <div class="relative flex-grow min-h-0">
+                    <canvas id="grayscaleChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico 3: Espectro Cromático RGB -->
+            <div class="bg-slate-50 border border-slate-200 rounded p-2 flex flex-col h-[280px]">
+                <div class="flex items-center justify-between border-b border-slate-200/50 pb-1 mb-1.5 flex-shrink-0">
+                    <span class="font-bold text-slate-700 text-xs">Cromático: Espectro RGB</span>
+                    <span class="text-[9px] text-slate-500 font-mono font-bold uppercase">Canais R, G, B</span>
+                </div>
+                <div class="relative flex-grow min-h-0">
+                    <canvas id="rgbChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -794,7 +849,7 @@
                 } else {
                     detailsTableBody.innerHTML = `
                         <tr>
-                            <td colspan="5" class="px-3 py-6 text-center text-slate-500">Nenhum registro de especificação de item encontrado para esta inspeção.</td>
+                            <td colspan="5" class="px-3 py-6 text-center text-slate-500">Nenhum registro de especificação de contorno mecânico encontrado para esta inspeção.</td>
                         </tr>
                     `;
                 }
@@ -830,5 +885,266 @@
     
     // Cleanup stream on window closing
     window.addEventListener('beforeunload', stopCamera);
+
+    // ==========================================
+    // PHASE 12: SPC CONTROL CHARTS CONTROLLER
+    // ==========================================
+    let chartDimensions = null;
+    let chartGrayscale = null;
+    let chartRGB = null;
+
+    // Shared chart styling config
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    boxWidth: 10,
+                    padding: 8,
+                    font: {
+                        size: 9,
+                        weight: 'bold'
+                    },
+                    color: '#475569' // slate-600
+                }
+            },
+            tooltip: {
+                titleFont: { size: 10 },
+                bodyFont: { size: 10 },
+                padding: 6
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    color: '#f1f5f9', // slate-100
+                    drawBorder: false
+                },
+                ticks: {
+                    font: {
+                        size: 8,
+                        family: 'monospace'
+                    },
+                    color: '#64748b' // slate-500
+                }
+            },
+            y: {
+                grid: {
+                    color: '#f1f5f9', // slate-100
+                    drawBorder: false
+                },
+                ticks: {
+                    font: {
+                        size: 8,
+                        family: 'monospace'
+                    },
+                    color: '#64748b' // slate-500
+                }
+            }
+        }
+    };
+
+    function renderCharts(payload) {
+        const labels = payload.data.map(item => item.timestamp);
+        
+        // --- 1. Dimensions Chart ---
+        const widthAvgData = payload.data.map(item => item.width_avg);
+        const lengthAvgData = payload.data.map(item => item.length_avg);
+        
+        const targetWidthVal = payload.sku.target_width_cm;
+        const targetLengthVal = payload.sku.target_length_cm;
+        
+        const targetWidthData = payload.data.map(() => targetWidthVal);
+        const targetLengthData = payload.data.map(() => targetLengthVal);
+        
+        const ctxDim = document.getElementById('dimensionsChart').getContext('2d');
+        if (chartDimensions) chartDimensions.destroy();
+        chartDimensions = new Chart(ctxDim, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Largura Média',
+                        data: widthAvgData,
+                        borderColor: 'rgb(79, 70, 229)', // indigo-600
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.8,
+                        tension: 0.1,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 4
+                    },
+                    {
+                        label: 'Comprimento Médio',
+                        data: lengthAvgData,
+                        borderColor: 'rgb(16, 185, 129)', // emerald-500
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.8,
+                        tension: 0.1,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 4
+                    },
+                    {
+                        label: 'Meta Largura (' + targetWidthVal.toFixed(2) + ' cm)',
+                        data: targetWidthData,
+                        borderColor: 'rgba(79, 70, 229, 0.4)',
+                        borderDash: [4, 4],
+                        borderWidth: 1.2,
+                        pointRadius: 0,
+                        fill: false
+                    },
+                    {
+                        label: 'Meta Comprimento (' + targetLengthVal.toFixed(2) + ' cm)',
+                        data: targetLengthData,
+                        borderColor: 'rgba(16, 185, 129, 0.4)',
+                        borderDash: [4, 4],
+                        borderWidth: 1.2,
+                        pointRadius: 0,
+                        fill: false
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+
+        // --- 2. Grayscale Chart ---
+        const grayAvgData = payload.data.map(item => item.grayscale_avg);
+        const grayTargetVal = payload.sku.gray_target_value;
+        const grayTolVal = payload.sku.gray_tolerance_range;
+        
+        const grayTargetData = payload.data.map(() => grayTargetVal);
+        const grayUpperData = payload.data.map(() => grayTargetVal + grayTolVal);
+        const grayLowerData = payload.data.map(() => Math.max(0, grayTargetVal - grayTolVal));
+        
+        const ctxGray = document.getElementById('grayscaleChart').getContext('2d');
+        if (chartGrayscale) chartGrayscale.destroy();
+        chartGrayscale = new Chart(ctxGray, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Cinza Médio',
+                        data: grayAvgData,
+                        borderColor: 'rgb(71, 85, 105)', // slate-600
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.8,
+                        tension: 0.1,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 4
+                    },
+                    {
+                        label: 'Meta (' + grayTargetVal + ')',
+                        data: grayTargetData,
+                        borderColor: 'rgba(71, 85, 105, 0.4)',
+                        borderDash: [4, 4],
+                        borderWidth: 1.2,
+                        pointRadius: 0,
+                        fill: false
+                    },
+                    {
+                        label: 'Limite Sup (' + (grayTargetVal + grayTolVal) + ')',
+                        data: grayUpperData,
+                        borderColor: 'rgba(239, 68, 68, 0.4)', // red-500
+                        borderDash: [4, 4],
+                        borderWidth: 1.2,
+                        pointRadius: 0,
+                        fill: false
+                    },
+                    {
+                        label: 'Limite Inf (' + Math.max(0, grayTargetVal - grayTolVal) + ')',
+                        data: grayLowerData,
+                        borderColor: 'rgba(239, 68, 68, 0.4)', // red-500
+                        borderDash: [4, 4],
+                        borderWidth: 1.2,
+                        pointRadius: 0,
+                        fill: false
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+
+        // --- 3. RGB Chart ---
+        const rgbRData = payload.data.map(item => item.rgb_r_avg);
+        const rgbGData = payload.data.map(item => item.rgb_g_avg);
+        const rgbBData = payload.data.map(item => item.rgb_b_avg);
+        
+        const ctxRGB = document.getElementById('rgbChart').getContext('2d');
+        if (chartRGB) chartRGB.destroy();
+        chartRGB = new Chart(ctxRGB, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Vermelho (R)',
+                        data: rgbRData,
+                        borderColor: 'rgb(239, 68, 68)', // red-500
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.8,
+                        tension: 0.1,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 4
+                    },
+                    {
+                        label: 'Verde (G)',
+                        data: rgbGData,
+                        borderColor: 'rgb(34, 197, 94)', // green-500
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.8,
+                        tension: 0.1,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 4
+                    },
+                    {
+                        label: 'Azul (B)',
+                        data: rgbBData,
+                        borderColor: 'rgb(59, 130, 246)', // blue-500
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.8,
+                        tension: 0.1,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 4
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+    }
+
+    async function updateSPCCharts() {
+        const limitSelector = document.getElementById('spcLimitSelector');
+        const limit = limitSelector ? limitSelector.value : 30;
+        
+        let url = `{% url 'medicoes:sku_analytics_data' sku_id=sku.id %}?limit=${limit}`;
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            if (!response.ok) throw new Error("Erro ao obter dados de controle estatístico");
+            const payload = await response.json();
+            
+            if (payload.success) {
+                renderCharts(payload);
+            }
+        } catch (error) {
+            console.error("Erro ao carregar dados do CEP:", error);
+        }
+    }
+
+    // Bind selector update trigger
+    const spcLimitSelector = document.getElementById('spcLimitSelector');
+    if (spcLimitSelector) {
+        spcLimitSelector.addEventListener('change', updateSPCCharts);
+    }
+
+    // Trigger initial charts loading
+    updateSPCCharts();
 </script>
 {% endblock %}
