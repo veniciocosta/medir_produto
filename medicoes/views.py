@@ -451,11 +451,7 @@ class SKUAnalyticsJsonView(View):
                 continue
             
             local_time = timezone.localtime(r.measured_at)
-            today = timezone.localtime(timezone.now()).date()
-            if local_time.date() == today:
-                timestamp = local_time.strftime('%H:%M')
-            else:
-                timestamp = local_time.strftime('%d/%m')
+            timestamp = local_time.strftime('%d/%m %H:%M')
 
             data.append({
                 'timestamp': timestamp,
