@@ -94,7 +94,7 @@ class ProductionLineForm(forms.ModelForm):
         fields = ['sector', 'name']
         widgets = {
             'sector': forms.Select(attrs={'class': 'block w-full rounded-lg border border-slate-300 py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white'}),
-            'name': forms.TextInput(attrs={'placeholder': 'Ex: Embaladora de Biscoitos #12', 'class': 'block w-full rounded-lg border border-slate-300 py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white'}),
+            'name': forms.TextInput(attrs={'placeholder': 'Ex: Linha de Estamparia #12', 'class': 'block w-full rounded-lg border border-slate-300 py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white'}),
         }
 
 
@@ -105,7 +105,7 @@ class ProductSKUForm(forms.ModelForm):
         widgets = {
             'production_line': forms.Select(attrs={'class': 'block w-full rounded-lg border border-slate-300 py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white'}),
             'code': forms.TextInput(attrs={'placeholder': 'Ex: 48019', 'class': 'block w-full rounded-lg border border-slate-300 py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white'}),
-            'name': forms.TextInput(attrs={'placeholder': 'Ex: ESTRELA CREAM CRACKER 20X400', 'class': 'block w-full rounded-lg border border-slate-300 py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white'}),
+            'name': forms.TextInput(attrs={'placeholder': 'Ex: Arruela Lisa M12 de Carbono', 'class': 'block w-full rounded-lg border border-slate-300 py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white'}),
             'target_width_cm': forms.NumberInput(attrs={'step': '0.01', 'placeholder': 'Ex: 12.00', 'class': 'block w-full rounded-lg border border-slate-300 py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white'}),
             'target_length_cm': forms.NumberInput(attrs={'step': '0.01', 'placeholder': 'Ex: 12.00', 'class': 'block w-full rounded-lg border border-slate-300 py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white'}),
         }

@@ -40,7 +40,7 @@
 
     <!-- Top Navigation Bar -->
     <header class="bg-slate-900 shadow-md flex-shrink-0">
-        <div class="{% block header_container_class %}max-w-7xl mx-auto px-4 sm:px-6 lg:px-8{% endblock %}">
+        <div class="{{ header_container_class|default:'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8' }}">
             <div class="flex items-center justify-between h-16">
                 <!-- Left logo/brand -->
                 <div class="flex items-center space-x-3">
@@ -73,7 +73,7 @@
     </header>
  
     <!-- Main Content Container -->
-    <main class="flex-grow {% block container_class %}max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8{% endblock %} overflow-y-auto">
+    <main class="flex-grow {{ container_class|default:'max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8' }} overflow-y-auto">
         {% if messages %}
             <div class="mb-2 space-y-1">
                 {% for message in messages %}
@@ -92,7 +92,7 @@
  
     <!-- Sleek Footer -->
     <footer class="bg-white border-t border-slate-200 py-4 flex-shrink-0">
-        <div class="{% block footer_container_class %}max-w-7xl mx-auto px-4 sm:px-6 lg:px-8{% endblock %} flex flex-col sm:flex-row items-center justify-between text-slate-500 text-xs">
+        <div class="{{ footer_container_class|default:'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8' }} flex flex-col sm:flex-row items-center justify-between text-slate-500 text-xs">
             <div>
                 &copy; 2026 Antigravity CV Systems. Todos os direitos reservados.
             </div>

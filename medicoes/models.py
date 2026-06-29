@@ -82,7 +82,7 @@ class ProductionLine(models.Model):
 class ProductSKU(models.Model):
     production_line = models.ForeignKey(ProductionLine, on_delete=models.CASCADE, related_name='skus')
     code = models.CharField(max_length=50, unique=True, help_text="Ex: 48019")
-    name = models.CharField(max_length=255, help_text="Ex: ESTRELA CREAM CRACKER 20X400")
+    name = models.CharField(max_length=255, help_text="Ex: Arruela Lisa M12 de Carbono")
     
     # Expected dimensions for quality validation
     target_width_cm = models.DecimalField(max_digits=5, decimal_places=2, help_text="Largura padrão esperada em cm")

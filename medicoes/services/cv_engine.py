@@ -70,7 +70,9 @@ def analyze_product_image(
     scale: int = 3,
     min_a4_area: int = 50000,
     min_product_area: int = 2000,
-    config: Any = None
+    config: Any = None,
+    width_offset_mm_override: Optional[float] = None,
+    length_offset_mm_override: Optional[float] = None
 ) -> Dict[str, Any]:
     """
     Analyzes an inspection photo to measure products placed on a white A4 reference paper.
@@ -123,6 +125,11 @@ def analyze_product_image(
             erosion_factor = config.get('erosion_amount', 1)
             width_offset_mm = float(config.get('width_offset_mm', 0.00))
             length_offset_mm = float(config.get('length_offset_mm', 0.00))
+            
+    if width_offset_mm_override is not None:
+        width_offset_mm = float(width_offset_mm_override)
+    if length_offset_mm_override is not None:
+        length_offset_mm = float(length_offset_mm_override)
     
     # 2. Process image to locate the A4 reference paper with tight edge bounds
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -326,44 +333,24 @@ def analyze_product_image(
                 'b_value': avg_rgb[2]
             })
             
-            # 7. Draw Visual Markups (Aligning Arrows strictly parallel to object axes)
-            # Draw green bounding rotated box
-            cv2.drawContours(annotated_output, [box], 0, (0, 255, 0), 2)
+            # 7. Draw Visual Markups (Minimal B2B clinical style)
+            # Draw 1px Tech-Cyan bounding rotated box
+            cv2.drawContours(annotated_output, [box], 0, (255, 255, 0), 1)
             
-            # Draw width arrow along shorter side
-            cv2.arrowedLine(
-                annotated_output,
-                (int(width_pts[0][0]), int(width_pts[0][1])),
-                (int(width_pts[1][0]), int(width_pts[1][1])),
-                (255, 0, 255), 2, tipLength=0.1
-            )
-            
-            # Draw length arrow along longer side
-            cv2.arrowedLine(
-                annotated_output,
-                (int(length_pts[0][0]), int(length_pts[0][1])),
-                (int(length_pts[1][0]), int(length_pts[1][1])),
-                (255, 0, 255), 2, tipLength=0.1
-            )
-            
-            # Compute text positions perpendicularly offset outside the box edges
-            width_text_pos = get_label_pos(width_pts[0], width_pts[1], offset_px=15)
-            length_text_pos = get_label_pos(length_pts[0], length_pts[1], offset_px=-15)
-            
-            # Draw measurement labels
+            # Draw subtle center circle and text for ID indicator
+            cv2.circle(annotated_output, (int(cx), int(cy)), 2, (120, 200, 50), -1)
             cv2.putText(
-                annotated_output, f"{width_cm}cm", width_text_pos,
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 1, cv2.LINE_AA
-            )
-            cv2.putText(
-                annotated_output, f"{length_cm}cm", length_text_pos,
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 1, cv2.LINE_AA
+                annotated_output, f"#{item_index}", (int(cx) + 5, int(cy) + 4),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA
             )
             
-            # Write item index number near object center
+            # Combine measurements and place elegantly above top boundary
+            top_vertex = min(box, key=lambda p: p[1])
+            text_x = max(5, min(annotated_output.shape[1] - 80, int(top_vertex[0])))
+            text_y = max(15, int(top_vertex[1]) - 5)
             cv2.putText(
-                annotated_output, f"#{item_index}", (int(cx) - 10, int(cy) + 5),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2, cv2.LINE_AA
+                annotated_output, f"{width_cm}x{length_cm} cm", (text_x, text_y),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA
             )
             
             item_index += 1
