@@ -5,9 +5,17 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "80:8000"
+      - "8023:8000"
     volumes:
       - ./data:/app/data
       - ./media:/app/media
     environment:
       - DJANGO_SETTINGS_MODULE=medidor_project.settings
+      - DEBUG=False
+      - SECRET_KEY
+      - ALLOWED_HOSTS
+      - CSRF_TRUSTED_ORIGINS
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_S3_BUCKET_NAME
+      - AWS_ENDPOINT_URL
