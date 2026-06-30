@@ -3,3 +3,6 @@ gunicorn
 opencv-python-headless
 numpy
 whitenoise
+django-storages
+boto3
+python-decouple
