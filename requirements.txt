@@ -6,3 +6,4 @@ whitenoise
 django-storages
 boto3
 python-decouple
+Pillow
